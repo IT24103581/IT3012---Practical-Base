@@ -37,7 +37,7 @@ class VisualGridHuntGame:
         
         #2.1 Generate toxic traps
         self.toxic_traps = set()
-        While len(self.toxic_traps) < 5:
+        while len(self.toxic_traps) < 5:
             tx = random.randint(0, self.width - 1)
             ty = random.randint(0, self.height - 1)
             trap = (tx, ty)
@@ -163,6 +163,21 @@ class GridGameGUI:
             y1 = (self.env.height - 1 - fy) * self.cell_size + offset
             self.canvas.create_oval(x1, y1, x1 + self.cell_size * 0.5, y1 + self.cell_size * 0.5, fill="#f59e0b",
                                     outline="#d97706")
+
+        # Draw toxic traps
+        for tx, ty in self.env.toxic_traps:
+            offset = self.cell_size * 0.25
+            x1 = tx * self.cell_size + offset
+            y1 = (self.env.height - 1 - ty) * self.cell_size + offset
+
+            self.canvas.create_rectangle(
+                x1,
+                y1,
+                x1 + self.cell_size * 0.5,
+                y1 + self.cell_size * 0.5,
+                fill="purple",
+                outline="black"
+            )
 
         for ox, oy in self.env.opponents:
             offset = self.cell_size * 0.2
