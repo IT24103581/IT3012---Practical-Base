@@ -1,5 +1,7 @@
 # agent.py
 import random
+from collections import deque
+import heapq
 
 class GreedyGridAgent:
     def __init__(self):
@@ -87,3 +89,133 @@ class ModelBasedAgent:
         self.last_action = action
 
         return action      
+
+class SearchAgent:
+
+    def get_neighbors(self, position, walls, grid_size):
+        x, y = position
+        width, height = grid_size
+
+        moves = [
+            ((x, y + 1), 'Up'),
+            ((x, y - 1), 'Down'),
+            ((x - 1, y), 'Left'),
+            ((x + 1, y), 'Right')
+        ]
+
+        neighbors = []
+
+        for new_pos, action in moves:
+            nx, ny = new_pos
+
+            if (
+                0 <= nx < width
+                and 0 <= ny < height
+                and new_pos not in walls
+            ):
+                neighbors.append((new_pos, action))
+
+        return neighbors
+
+    def reconstruct_path(self, parent, start, goal):
+        path = []
+        current = goal
+
+        while current != start:
+            previous, action = parent[current]
+            path.append(action)
+            current = previous
+
+        path.reverse()
+        return path
+
+    def bfs_search(self, start, goal, walls, grid_size):
+        if start == goal:
+            return []
+
+        frontier = deque([start])
+        reached = {start}
+        parent = {}
+
+        while frontier:
+            current = frontier.popleft()
+
+            for next_pos, action in self.get_neighbors(
+                current, walls, grid_size
+            ):
+                if next_pos not in reached:
+                    reached.add(next_pos)
+                    parent[next_pos] = (current, action)
+
+                    if next_pos == goal:
+                        return self.reconstruct_path(
+                            parent, start, goal
+                        )
+
+                    frontier.append(next_pos)
+
+        return None
+
+    def dfs_search(self, start, goal, walls, grid_size):
+        if start == goal:
+            return []
+
+        frontier = [start]
+        reached = {start}
+        parent = {}
+
+        while frontier:
+            current = frontier.pop()
+
+            for next_pos, action in self.get_neighbors(
+                current, walls, grid_size
+            ):
+                if next_pos not in reached:
+                    reached.add(next_pos)
+                    parent[next_pos] = (current, action)
+
+                    if next_pos == goal:
+                        return self.reconstruct_path(
+                            parent, start, goal
+                        )
+
+                    frontier.append(next_pos)
+
+        return None
+
+    def ucs_search(self, start, goal, walls, grid_size):
+        if start == goal:
+            return []
+
+        frontier = []
+        heapq.heappush(frontier, (0, start))
+
+        reached = {start: 0}
+        parent = {}
+
+        while frontier:
+            cost, current = heapq.heappop(frontier)
+
+            if current == goal:
+                return self.reconstruct_path(
+                    parent, start, goal
+                )
+
+            for next_pos, action in self.get_neighbors(
+                current, walls, grid_size
+            ):
+                new_cost = cost + 1
+
+                if (
+                    next_pos not in reached
+                    or new_cost < reached[next_pos]
+                ):
+                    reached[next_pos] = new_cost
+                    parent[next_pos] = (current, action)
+
+                    heapq.heappush(
+                        frontier,
+                        (new_cost, next_pos)
+                    )
+
+        return None
