@@ -92,6 +92,10 @@ class ModelBasedAgent:
 
 class SearchAgent:
 
+    def __init__(self):
+        self.plan = []
+        self.active_algo = 'BFS'
+
     def get_neighbors(self, position, walls, grid_size):
         x, y = position
         width, height = grid_size
@@ -219,3 +223,70 @@ class SearchAgent:
                     )
 
         return None
+
+    def find_closest_food(self, start, food_positions):
+        if not food_positions:
+            return None
+
+        return min(
+            food_positions,
+            key=lambda food:
+                abs(food[0] - start[0]) +
+                abs(food[1] - start[1])
+        )
+
+
+    def sense_and_act(self, percept):
+
+        if not self.plan:
+
+            start = tuple(percept['agent_pos'])
+
+            food_positions = [
+                tuple(food)
+                for food in percept['all_food']
+            ]
+
+            if not food_positions:
+                return 'Stay'
+
+            goal = self.find_closest_food(
+                start,
+                food_positions
+            )
+
+            walls = {
+                tuple(wall)
+                for wall in percept['walls']
+            }
+
+            grid_size = percept['grid_size']
+
+            if self.active_algo == 'BFS':
+                self.plan = self.bfs_search(
+                    start,
+                    goal,
+                    walls,
+                    grid_size
+                )
+
+            elif self.active_algo == 'DFS':
+                self.plan = self.dfs_search(
+                    start,
+                    goal,
+                    walls,
+                    grid_size
+                )
+
+            elif self.active_algo == 'UCS':
+                self.plan = self.ucs_search(
+                    start,
+                    goal,
+                    walls,
+                    grid_size
+                )
+
+        if self.plan:
+            return self.plan.pop(0)
+
+        return 'Stay'    
