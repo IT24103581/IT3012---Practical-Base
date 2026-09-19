@@ -531,6 +531,49 @@ class SearchAgent:
 
         return None
 
+    def astar_search(self, start_pos, goal_pos, walls, grid_size, heuristic_type='manhattan'):
+        if start_pos == goal_pos:
+            return []
+
+        if heuristic_type == 'manhattan':
+            heuristic = self.manhattan_distance
+        else:
+            heuristic = self.euclidean_distance
+
+        frontier = []
+        reached_states = set()
+
+        start_h = heuristic(start_pos, goal_pos)
+
+        # A* tuple format: (f_cost, g_cost, current_pos, path_taken)
+        heapq.heappush(frontier, (start_h, 0, start_pos, []))
+
+        while frontier:
+            f_cost, g_cost, current_pos, path_taken = heapq.heappop(frontier)
+
+            if current_pos == goal_pos:
+                return path_taken
+
+            if current_pos in reached_states:
+                continue
+
+            reached_states.add(current_pos)
+
+            for next_pos, action in self.get_neighbors(
+                current_pos, walls, grid_size
+            ):
+                if next_pos not in reached_states:
+                    g_new = g_cost + 1
+                    h_new = heuristic(next_pos, goal_pos)
+                    f_new = g_new + h_new
+
+                    heapq.heappush(
+                        frontier,
+                        (f_new, g_new, next_pos, path_taken + [action])
+                    )
+
+        return None
+        
     def find_closest_food(self, start, food_positions):
         if not food_positions:
             return None
